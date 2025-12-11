@@ -1,0 +1,205 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                   String              @id @default(cuid())
+  name                 String?
+  email                String              @unique
+  password             String?
+  role                 Role                @default(CUSTOMER)
+  isActive             Boolean             @default(true)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  promotedAt           DateTime?
+  promotedById         String?
+  bookings             Booking[]
+  categoriesCreated    Category[]          @relation("CategoryCreatedBy")
+  categoriesUpdated    Category[]          @relation("CategoryUpdatedBy")
+  eventsApproved       Event[]             @relation("EventApprovedBy")
+  eventsCreated        Event[]             @relation("EventCreatedBy")
+  eventsUpdated        Event[]             @relation("EventUpdatedBy")
+  processedRequests    PermissionRequest[] @relation("processedBy")
+  permissionRequests   PermissionRequest[]
+  subCategoriesCreated SubCategory[]       @relation("SubCategoryCreatedBy")
+  subCategoriesUpdated SubCategory[]       @relation("SubCategoryUpdatedBy")
+  promotedBy           User?               @relation("promotedBy", fields: [promotedById], references: [id])
+  adminUsers           User[]              @relation("promotedBy")
+  userPermissions      UserPermission[]
+}
+
+model PermissionRequest {
+  id            String        @id @default(cuid())
+  userId        String
+  requestedRole Role
+  message       String?
+  status        RequestStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
+  processedById String?
+  processedAt   DateTime?
+  processedBy   User?         @relation("processedBy", fields: [processedById], references: [id])
+  user          User          @relation(fields: [userId], references: [id])
+}
+
+model Category {
+  id            String        @id @default(cuid())
+  name          String        @unique
+  description   String?
+  isActive      Boolean       @default(true)
+  createdById   String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
+  image         String?
+  updatedById   String?
+  createdBy     User          @relation("CategoryCreatedBy", fields: [createdById], references: [id])
+  updatedBy     User?         @relation("CategoryUpdatedBy", fields: [updatedById], references: [id])
+  events        Event[]
+  subCategories SubCategory[]
+}
+
+model SubCategory {
+  id                 String             @id @default(cuid())
+  name               String
+  description        String?
+  categoryId         String
+  isActive           Boolean            @default(true)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  createdById        String
+  deletedAt          DateTime?
+  updatedById        String?
+  eventSubCategories EventSubCategory[]
+  category           Category           @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdBy          User               @relation("SubCategoryCreatedBy", fields: [createdById], references: [id])
+  updatedBy          User?              @relation("SubCategoryUpdatedBy", fields: [updatedById], references: [id])
+  events             Event[]            @relation("EventSubCategories")
+
+  @@unique([name, categoryId])
+}
+
+model Permission {
+  id              String           @id @default(cuid())
+  name            String           @unique
+  description     String?
+  createdAt       DateTime         @default(now())
+  userPermissions UserPermission[]
+}
+
+model UserPermission {
+  id           String     @id @default(cuid())
+  userId       String
+  permissionId String
+  assignedAt   DateTime   @default(now())
+  assignedBy   String?
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, permissionId])
+}
+
+model Event {
+  id                 String             @id @default(cuid())
+  title              String
+  description        String
+  coverImage         String
+  profileImage       String?
+  categoryId         String
+  location           String
+  eventDate          DateTime
+  eventTime          String
+  duration           Int?
+  status             EventStatus        @default(DRAFT)
+  createdById        String
+  updatedById        String?
+  approvedById       String?
+  approvedAt         DateTime?
+  isActive           Boolean            @default(true)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  deletedAt          DateTime?
+  bookings           Booking[]
+  approvedBy         User?              @relation("EventApprovedBy", fields: [approvedById], references: [id])
+  category           Category           @relation(fields: [categoryId], references: [id])
+  createdBy          User               @relation("EventCreatedBy", fields: [createdById], references: [id])
+  updatedBy          User?              @relation("EventUpdatedBy", fields: [updatedById], references: [id])
+  eventSubCategories EventSubCategory[]
+  tickets            TicketType[]
+  subCategories      SubCategory[]      @relation("EventSubCategories")
+}
+
+model TicketType {
+  id             String    @id @default(cuid())
+  eventId        String
+  name           String
+  price          Decimal   @db.Decimal(10, 2)
+  quantity       Int
+  quantityBooked Int       @default(0)
+  description    String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  bookings       Booking[]
+  event          Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, name])
+}
+
+model Booking {
+  id            String        @id @default(cuid())
+  eventId       String
+  ticketTypeId  String
+  customerId    String
+  quantity      Int
+  totalPrice    Decimal       @db.Decimal(10, 2)
+  bookingStatus BookingStatus @default(CONFIRMED)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  customer      User          @relation(fields: [customerId], references: [id])
+  event         Event         @relation(fields: [eventId], references: [id])
+  ticketType    TicketType    @relation(fields: [ticketTypeId], references: [id])
+}
+
+model EventSubCategory {
+  id            String      @id @default(cuid())
+  eventId       String
+  subCategoryId String
+  createdAt     DateTime    @default(now())
+  event         Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  subCategory   SubCategory @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, subCategoryId])
+}
+
+enum Role {
+  CUSTOMER
+  EVENT_CREATOR
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum EventStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  HOLD
+  CANCELLED
+  COMPLETED
+  ARCHIVED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  USED
+}

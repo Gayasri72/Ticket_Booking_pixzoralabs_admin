@@ -1,0 +1,22 @@
+
+> admin@0.1.0 dev
+> next dev
+
+ ⚠ Port 3000 is in use by an unknown process, using available port 3002 instead.
+   ▲ Next.js 16.0.7 (Turbopack)
+   - Local:         http://localhost:3002
+   - Network:       http://192.168.8.118:3002
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 883ms
+ ○ Compiling /admin/signin ...
+ GET /admin/signin?id=b567aa49-38fd-4b80-bb53-8de71979872c&vscodeBrowserReqId=1765421460712 200 in 5.2s (compile: 4.9s, proxy.ts: 117ms, render: 126ms)
+ GET /api/auth/session 200 in 782ms (compile: 770ms, render: 12ms)
+ GET /api/auth/session 200 in 24ms (compile: 21ms, render: 3ms)
+ GET /admin/signin 200 in 30ms (compile: 3ms, proxy.ts: 5ms, render: 22ms)
+ GET /api/auth/session 200 in 29ms (compile: 24ms, render: 4ms)
+ GET /api/auth/session 200 in 5ms (compile: 1680µs, render: 3ms)
+ GET /admin/signin 200 in 28ms (compile: 1603µs, proxy.ts: 4ms, render: 22ms)
+ GET /api/auth/session 200 in 27ms (compile: 24ms, render: 3ms)
+ GET /api/auth/session 200 in 5ms (compile: 1357µs, render: 3ms)
